@@ -18,7 +18,7 @@
         rel="stylesheet">
 
     <!-- Custom Styles -->
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
 
 <body class="h-[100dvh] w-full overflow-hidden bg-slate-900 relative text-slate-100">
@@ -441,37 +441,49 @@
     <div id="mainMapArea" class="absolute inset-0 z-0">
         <div id="map" class="w-full h-full"></div>
 
-        <!-- Map Layer Toggle Floating -->
-        <div
-            class="absolute top-4 right-4 md:right-4 z-[1000] flex gap-1 shadow-2xl bg-slate-900/95 backdrop-blur-md p-1 rounded-xl border border-slate-700">
-            <button id="btn2D" onclick="setMapStyle('2D')" class="map-toggle-btn active">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
-                Map
+        <!-- ===== MAP FLOATING CONTROLS (Right Panel) ===== -->
+        <!-- Grouped: Map/Satellite Toggle + Theme Toggle in one column -->
+        <div class="absolute top-4 right-4 z-[1000] flex flex-col gap-2 items-end">
+
+            <!-- Map Layer Toggle -->
+            <div class="flex gap-1 shadow-2xl bg-slate-900/95 backdrop-blur-md p-1 rounded-xl border border-slate-700">
+                <button id="btn2D" onclick="setMapStyle('2D')" class="map-toggle-btn active">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                    Map
+                </button>
+                <button id="btn3D" onclick="setMapStyle('3D')" class="map-toggle-btn">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/></svg>
+                    Satellite
+                </button>
+            </div>
+
+            <!-- Theme Toggle (di bawah Map toggle, sejajar kanan) -->
+            <button id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Light/Dark Mode"
+                class="w-[34px] h-[34px] bg-slate-900/95 backdrop-blur-md border border-slate-700 rounded-full flex items-center justify-center text-yellow-400 hover:bg-slate-700 transition-all shadow-lg shadow-black/30">
+                <svg id="themeIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
             </button>
-            <button id="btn3D" onclick="setMapStyle('3D')" class="map-toggle-btn">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/></svg>
-                Satellite
+
+            <!-- GPS FAB (paling bawah, tetap di kolom kanan) -->
+            <button id="gpsFabBtn" onclick="toggleGpsTracking()" title="Lacak Lokasi GPS"
+                class="w-12 h-12 bg-slate-800 border border-slate-600 rounded-full flex items-center justify-center text-blue-400 hover:text-white hover:bg-slate-700 transition-all shadow-lg shadow-black/50">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
             </button>
+
         </div>
-
-        <!-- Theme Toggle -->
-        <button id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Light/Dark Mode" class="absolute top-4 left-[195px] z-[1000] w-[34px] h-[34px] bg-slate-800 border border-slate-600 rounded-full flex items-center justify-center text-yellow-400 hover:bg-slate-700 transition-all shadow-lg shadow-black/30">
-            <svg id="themeIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-        </button>
-
-        <!-- Floating Action Button for Current Location -->
-        <button id="gpsFabBtn" onclick="toggleGpsTracking()"
-            class="absolute top-20 right-4 md:top-auto md:bottom-8 md:right-6 z-[1000] w-12 h-12 bg-slate-800 border border-slate-600 rounded-full flex items-center justify-center text-blue-400 hover:text-white hover:bg-slate-700 transition-all shadow-lg shadow-black/50">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-            </svg>
-        </button>
 
 
     </div>
 
-    <script src="locations.js"></script>
-    <script src="app.js"></script>
+    <!-- ===== Modular JavaScript (urutan loading penting!) ===== -->
+    <script src="js/config.js"></script>    <!-- 1. Konstanta global -->
+    <script src="js/locations.js"></script> <!-- 2. Data lokasi + autocomplete -->
+    <script src="js/auth.js"></script>      <!-- 3. Sistem login/register -->
+    <script src="js/map.js"></script>       <!-- 4. Peta, GPS, marker -->
+    <script src="js/routing.js"></script>   <!-- 5. Algoritma & kalkulasi rute -->
+    <script src="js/ui.js"></script>        <!-- 6. Toast, theme, bottom sheet, splash -->
+    <script src="js/app.js"></script>       <!-- 7. Entry point (window.onload) -->
 
     <!-- Toast Container -->
     <div id="toastContainer" class="toast-container"></div>
