@@ -414,12 +414,20 @@ async function processRouting() {
     errorBox.classList.add('hidden');
     document.getElementById('journeyPanel').classList.add('hidden');
 
-    const btn = document.getElementById('findBtn');
-    btn.innerHTML = `<span class="animate-pulse">Analyzing Routes...</span>`; btn.disabled = true;
+    // Hide empty state, show stepper
+    const emptyState = document.getElementById('emptyStatePanel');
+    if (emptyState) emptyState.classList.add('hidden');
 
-    // Show skeleton, hide journey panel
-    document.getElementById('resultSkeleton').classList.add('visible');
-    document.getElementById('journeyPanel').classList.add('hidden');
+    const btn = document.getElementById('findBtn');
+    btn.innerHTML = `<span class="animate-pulse">Menganalisis...</span>
+    <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+    </svg>`;
+    btn.disabled = true;
+
+    // Show progress stepper
+    showRouteStepper();
 
     try {
         let originCoords = null;
@@ -433,6 +441,8 @@ async function processRouting() {
         }
         const destCoords = { lat: nodes[endId].lat, lng: nodes[endId].lng };
 
+        // Step 2: Fetch route
+        await advanceStepper(1);
         const travelMode = document.getElementById('travelMode').value;
         const osrmUrl = `https://router.project-osrm.org/route/v1/${travelMode}/${originCoords.lng},${originCoords.lat};${destCoords.lng},${destCoords.lat}?overview=full&geometries=geojson&steps=true`;
         const res = await fetch(osrmUrl);
@@ -441,6 +451,8 @@ async function processRouting() {
         if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
             throw new Error("Rute tidak dapat ditemukan dengan mode ini.");
         }
+
+        await advanceStepper(2);
 
         const route = data.routes[0];
         const distanceMetres = route.distance;
@@ -468,15 +480,80 @@ async function processRouting() {
 
         const polylineCoords = route.geometry.coordinates.map(c => [c[1], c[0]]);
 
+        await advanceStepper(3);
         drawRouteReal(polylineCoords, actualAlgoStart, endId, startId === 'gps', originCoords, routeColor);
         showResult(distText, etaMinutes, modeText, route.legs[0].steps, startId, endId);
+
     } catch (e) {
         showError(e.message);
+        // Restore empty state on error
+        if (emptyState) emptyState.classList.remove('hidden');
     } finally {
         resetButton();
-        document.getElementById('resultSkeleton').classList.remove('visible');
+        hideRouteStepper();
     }
 }
+
+// ---- Progress Stepper Helpers ----
+const STEPPER_STEPS = [
+    { icon: '📡', label: 'Menghubungkan Server', sub: 'Mengakses OSRM routing engine...' },
+    { icon: '🧭', label: 'Menemukan Jalur', sub: 'AI menganalisis rute terpendek...' },
+    { icon: '📐', label: 'Menghitung Jarak & ETA', sub: 'Memproses data jarak & waktu...' },
+    { icon: '✅', label: 'Rute Siap!', sub: 'Navigasi dimulai...' },
+];
+
+let stepperCurrentStep = 0;
+
+function showRouteStepper() {
+    stepperCurrentStep = 0;
+    const card = document.getElementById('routeProgressCard');
+    const stepsEl = document.getElementById('stepperSteps');
+    if (!card || !stepsEl) return;
+
+    stepsEl.innerHTML = STEPPER_STEPS.map((s, i) => `
+        <div class="stepper-step ${i === 0 ? 'step-active' : ''}" id="stepper-step-${i}">
+            <div class="stepper-icon">${s.icon}</div>
+            <div class="stepper-label">
+                <span class="stepper-label-main">${s.label}</span>
+                <span class="stepper-label-sub">${i === 0 ? s.sub : '—'}</span>
+            </div>
+            <div class="stepper-status">${i === 0 ? '<span class="stepper-spinner">⟳</span>' : ''}</div>
+        </div>
+    `).join('');
+
+    card.classList.remove('hidden');
+}
+
+function advanceStepper(toStep) {
+    return new Promise(resolve => {
+        // Mark previous as done
+        const prevEl = document.getElementById(`stepper-step-${toStep - 1}`);
+        if (prevEl) {
+            prevEl.classList.remove('step-active');
+            prevEl.classList.add('step-done');
+            prevEl.querySelector('.stepper-status').innerHTML = '✔️';
+            prevEl.querySelector('.stepper-label-sub').textContent = 'Selesai';
+        }
+        // Activate current
+        const curEl = document.getElementById(`stepper-step-${toStep}`);
+        if (curEl) {
+            curEl.classList.add('step-active');
+            const sub = STEPPER_STEPS[toStep]?.sub || '';
+            curEl.querySelector('.stepper-label-sub').textContent = sub;
+            curEl.querySelector('.stepper-status').innerHTML = '<span class="stepper-spinner">⟳</span>';
+        }
+        stepperCurrentStep = toStep;
+        setTimeout(resolve, 320);
+    });
+}
+
+function hideRouteStepper() {
+    const card = document.getElementById('routeProgressCard');
+    if (card) {
+        setTimeout(() => card.classList.add('hidden'), 500);
+    }
+}
+
 
 function drawRouteReal(polylineCoords, startId, endId, isGpsStart, gpsCoords, routeColor) {
     if (routeLayer) map.removeLayer(routeLayer);
@@ -496,6 +573,11 @@ function drawRouteReal(polylineCoords, startId, endId, isGpsStart, gpsCoords, ro
 function showResult(distText, etaMinutes, modeText, steps, startId, endId) {
     // Show journey panel
     document.getElementById('journeyPanel').classList.remove('hidden');
+    
+    // Auto expand bottom sheet on mobile to show results
+    if (window.innerWidth <= 768) {
+        updateSheetState('full');
+    }
 
     // ETA: current time + travel duration
     const now = new Date();
@@ -637,8 +719,137 @@ function toggleTheme() {
     }
 }
 
+// ============ BOTTOM SHEET LOGIC ============
+let sheetState = 'half'; // 'collapsed', 'half', 'full'
+let sheetStartY = 0;
+let sheetCurrentY = 0;
+
+function updateSheetState(newState) {
+    const sidebar = document.getElementById('mainSidebar');
+    if (!sidebar) return;
+    sidebar.classList.remove('bottom-sheet-collapsed', 'bottom-sheet-half', 'bottom-sheet-full');
+    sidebar.classList.add(`bottom-sheet-${newState}`);
+    sheetState = newState;
+}
+
+function initBottomSheet() {
+    const handle = document.getElementById('dragHandle');
+    const sidebar = document.getElementById('mainSidebar');
+    if (!handle || !sidebar) return;
+
+    handle.addEventListener('touchstart', (e) => {
+        sheetStartY = e.touches[0].clientY;
+        sidebar.style.transition = 'none';
+    }, { passive: true });
+
+    handle.addEventListener('touchmove', (e) => {
+        sheetCurrentY = e.touches[0].clientY;
+    }, { passive: true });
+
+    handle.addEventListener('touchend', (e) => {
+        sidebar.style.transition = '';
+        
+        if (sheetCurrentY === 0) {
+            // Tap without move
+            if (sheetState === 'collapsed') updateSheetState('half');
+            else if (sheetState === 'half') updateSheetState('full');
+            else updateSheetState('half');
+            return;
+        }
+
+        const deltaY = sheetCurrentY - sheetStartY;
+        
+        if (deltaY > 50) {
+            // Swipe down
+            if (sheetState === 'full') updateSheetState('half');
+            else if (sheetState === 'half') updateSheetState('collapsed');
+        } else if (deltaY < -50) {
+            // Swipe up
+            if (sheetState === 'collapsed') updateSheetState('half');
+            else if (sheetState === 'half') updateSheetState('full');
+        } else {
+            // Small move (treat as tap)
+            if (sheetState === 'collapsed') updateSheetState('half');
+            else if (sheetState === 'half') updateSheetState('full');
+            else updateSheetState('half');
+        }
+        sheetStartY = 0;
+        sheetCurrentY = 0;
+    });
+}
+
 window.onload = () => {
     mockDatabase.push({ username: 'dosen_ai', password: '123' });
+    initSplashScreen();
+    initBottomSheet();
+    initRippleEffect();
+};
+
+// ============ SPLASH SCREEN ============
+function initSplashScreen() {
+    const splash = document.getElementById('splashScreen');
+    const bar = document.getElementById('splashProgressBar');
+    const loadingText = document.getElementById('splashLoadingText');
+    if (!splash || !bar) { initApp(); return; }
+
+    const messages = [
+        'Memuat peta kampus...',
+        'Menghubungkan ke AI Navigator...',
+        'Mengoptimalkan jalur terpendek...',
+        'Siap digunakan!'
+    ];
+    let progress = 0;
+    let msgIndex = 0;
+
+    const interval = setInterval(() => {
+        progress += Math.random() * 22 + 8;
+        if (progress > 100) progress = 100;
+        bar.style.width = progress + '%';
+
+        msgIndex = Math.min(Math.floor(progress / 26), messages.length - 1);
+        if (loadingText) loadingText.textContent = messages[msgIndex];
+
+        if (progress >= 100) {
+            clearInterval(interval);
+            setTimeout(() => {
+                splash.classList.add('splash-hidden');
+                setTimeout(() => {
+                    splash.style.display = 'none';
+                }, 650);
+                initApp();
+            }, 400);
+        }
+    }, 130);
+}
+
+function initApp() {
     initMap();
     updateUIBasedOnAuth();
-};
+}
+
+// ============ RIPPLE EFFECT ============
+function initRippleEffect() {
+    // Apply to all btn-gradient buttons (current and future)
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-gradient, .segment-btn, .map-toggle-btn');
+        if (!btn) return;
+
+        // btn must be position:relative + overflow:hidden (already set for .btn-gradient)
+        const rect = btn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height) * 1.6;
+        const x = e.clientX - rect.left - size / 2;
+        const y = e.clientY - rect.top - size / 2;
+
+        const ripple = document.createElement('span');
+        ripple.className = 'ripple-wave';
+        ripple.style.cssText = `
+            width: ${size}px;
+            height: ${size}px;
+            left: ${x}px;
+            top: ${y}px;
+        `;
+
+        btn.appendChild(ripple);
+        ripple.addEventListener('animationend', () => ripple.remove());
+    });
+}
