@@ -195,14 +195,48 @@ body {
     background: rgba(255, 255, 255, 0.1) !important;
 }
 
-.leaflet-top .leaflet-control-zoom {
-    margin-top: 70px !important;
-    margin-right: 16px !important;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important;
+/* Sembunyikan container Leaflet kanan-atas — zoom dinonaktifkan */
+.leaflet-top.leaflet-right {
+    display: none !important;
+}
+
+/* Safety net: sembunyikan zoom control di manapun posisinya */
+.leaflet-control-zoom {
+    display: none !important;
 }
 
 .dark-map-filter {
     filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
+
+/* =============================================
+   NIGHT MODE — Hanya peta yang berubah gelap
+   Sidebar, tombol, teks = TIDAK berubah sama sekali
+   ============================================= */
+
+/* Smooth transition saat toggle mode */
+#map {
+    transition: filter 0.5s ease;
+}
+
+/* Saat class .map-night-mode ditambahkan ke #map:
+   - Tile OSM diinvert → menjadi gelap seperti Google Maps dark
+   - Satelit tetap normal (filter di-counter oleh invert ganda) */
+#map.map-night-mode .leaflet-tile-pane {
+    filter: invert(100%) hue-rotate(180deg) brightness(85%) contrast(90%) saturate(0.9);
+}
+
+/* Counter-invert marker & overlay agar warna pin/rute tetap asli */
+#map.map-night-mode .leaflet-marker-pane,
+#map.map-night-mode .leaflet-overlay-pane,
+#map.map-night-mode .leaflet-shadow-pane,
+#map.map-night-mode .leaflet-popup-pane {
+    filter: invert(100%) hue-rotate(180deg);
+}
+
+/* Animasi rute tetap terlihat di night mode */
+#map.map-night-mode .animated-route {
+    filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.8));
 }
 
 /* Smooth transitions */

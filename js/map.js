@@ -51,7 +51,8 @@ const gpsIcon = L.divIcon({
 // -----------------------------------------------
 function initMap() {
     map = L.map('map', { zoomControl: false }).setView(MAP_CONFIG.center, MAP_CONFIG.zoom);
-    L.control.zoom({ position: 'topright' }).addTo(map);
+    // Zoom control ditangani oleh custom buttons di HTML (bukan Leaflet default)
+
 
     osmLayer       = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap', maxZoom: 19 });
     satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri', maxZoom: 19 });
@@ -60,6 +61,12 @@ function initMap() {
     setupAutocomplete('startSearch', 'startDropdown', 'startNode');
     setupAutocomplete('endSearch',   'endDropdown',   'endNode');
 }
+
+// -----------------------------------------------
+// Fungsi Helper Zoom (dipanggil dari HTML)
+// -----------------------------------------------
+function zoomMapIn()  { if (map) map.zoomIn(); }
+function zoomMapOut() { if (map) map.zoomOut(); }
 
 // -----------------------------------------------
 // Toggle Gaya Peta (Map / Satellite)

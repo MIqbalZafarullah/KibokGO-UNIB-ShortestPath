@@ -93,6 +93,11 @@ async function processRouting() {
         const distText       = distanceMetres >= 1000 ? (distanceMetres / 1000).toFixed(2) + ' km' : Math.round(distanceMetres) + ' m';
         const polylineCoords = route.geometry.coordinates.map(c => [c[1], c[0]]);
 
+        // Override warna rute jika Night Mode aktif
+        if (typeof isNightMode !== 'undefined' && isNightMode) {
+            routeColor = '#3b82f6'; // biru untuk mode malam
+        }
+
         await advanceStepper(3);
         drawRouteReal(polylineCoords, actualAlgoStart, endId, startId === 'gps', originCoords, routeColor);
         showResult(distText, etaMinutes, modeText, route.legs[0].steps, startId, endId);
