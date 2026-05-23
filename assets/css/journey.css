@@ -1,0 +1,192 @@
+/* =============================================
+   JOURNEY.CSS — Journey Panel, Destination Card,
+   Turn-by-Turn Accordion
+   ============================================= */
+
+/* Panel Header */
+.journey-panel-header {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 18px;
+    padding: 14px 16px;
+}
+
+.jp-active-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #34d399;
+    animation: pulse 1.5s infinite;
+    flex-shrink: 0;
+    display: inline-block;
+}
+
+.jp-fastest-badge {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(52, 211, 153, 0.1);
+    color: #34d399;
+    border: 1px solid rgba(52, 211, 153, 0.3);
+    letter-spacing: 0.05em;
+}
+
+.jp-route-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.jp-route-name {
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+    line-height: 1.3;
+}
+
+/* Metrics Grid — ETA tall left, Distance+Mode stacked right */
+.jp-metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.jp-eta-card {
+    min-height: 110px;
+    justify-content: center;
+}
+
+.jp-metric-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #475569;
+    margin-bottom: 3px;
+}
+
+.jp-eta-time {
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: #34d399;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    margin: 2px 0;
+}
+
+.jp-metric-value {
+    font-size: 13px;
+    font-weight: 800;
+}
+
+/* Destination Card */
+.jp-dest-card {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.jp-dest-image {
+    width: 100%;
+    height: 108px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    background-color: rgba(30, 41, 59, 0.8);
+}
+
+.jp-dest-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 3px 8px;
+    border-radius: 6px;
+    backdrop-filter: blur(8px);
+    background: rgba(59, 130, 246, 0.3);
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.jp-share-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(99, 102, 241, 0.1);
+    color: #a5b4fc;
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.jp-share-btn:hover {
+    background: rgba(99, 102, 241, 0.22);
+    border-color: rgba(99, 102, 241, 0.5);
+}
+
+/* Turn-by-Turn Accordion */
+.jp-tbt-details {
+    background: rgba(15, 23, 42, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.jp-tbt-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 14px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    transition: color 0.2s ease;
+}
+
+.jp-tbt-summary::-webkit-details-marker {
+    display: none;
+}
+
+.jp-tbt-summary:hover {
+    color: #94a3b8;
+}
+
+.jp-chevron {
+    margin-left: auto;
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+.jp-tbt-details[open] .jp-chevron {
+    transform: rotate(180deg);
+}
+
+.jp-tbt-body {
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 4px 14px 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}

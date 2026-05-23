@@ -1,0 +1,320 @@
+/* =============================================
+   COMPONENTS.CSS — Glassmorphism, Buttons, Inputs,
+   Travel Mode, Toast Notifications, GPS Radar
+   ============================================= */
+
+/* Glassmorphism Classes */
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+}
+
+/* Input Fields */
+.modern-input {
+    background: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #0B192C !important;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.modern-input::placeholder {
+    color: #64748b !important;
+}
+
+.modern-input:focus {
+    background: #ffffff !important;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    outline: none;
+}
+
+/* Primary Gradient Button */
+.btn-gradient {
+    background: linear-gradient(135deg, var(--primary-blue), var(--primary-indigo));
+    color: white;
+    transition: all 0.3s ease;
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-gradient:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -10px var(--primary-indigo);
+}
+
+.btn-gradient:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Shimmer Button Effect */
+.btn-gradient::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+    animation: btn-shimmer 2.5s infinite;
+    pointer-events: none;
+}
+
+@keyframes btn-shimmer {
+    0% {
+        left: -100%;
+    }
+
+    100% {
+        left: 200%;
+    }
+}
+
+/* Animated Logo Ring */
+.logo-wrapper {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+}
+
+.logo-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 18px;
+    background: conic-gradient(from 0deg, #3b82f6, #06b6d4, #6366f1, #a855f7, #3b82f6);
+    animation: spin-ring 3s linear infinite;
+    z-index: 0;
+}
+
+.logo-wrapper>div {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+}
+
+@keyframes spin-ring {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Segmented Control for Travel Mode */
+.segmented-control {
+    background: transparent;
+    border-radius: 12px;
+    padding: 0;
+}
+
+.segment-btn {
+    transition: all 0.3s ease;
+    color: rgba(255, 255, 255, 0.7);
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.segment-btn.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid #93c5fd;
+}
+
+/* Travel Mode Icon Bounce */
+@keyframes icon-bounce {
+    0% {
+        transform: scale(1);
+    }
+
+    40% {
+        transform: scale(1.35) rotate(-6deg);
+    }
+
+    70% {
+        transform: scale(0.88);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.segment-btn.active .mode-icon {
+    animation: icon-bounce 0.4s ease;
+}
+
+/* User Avatar Premium Ring */
+@keyframes avatar-ring-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.45), 0 0 18px rgba(6, 182, 212, 0.2);
+    }
+
+    50% {
+        box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.2), 0 0 28px rgba(6, 182, 212, 0.12);
+    }
+}
+
+.avatar-premium {
+    animation: avatar-ring-pulse 2.5s ease-in-out infinite;
+}
+
+/* Feature Pills */
+.feature-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.feature-pill:hover {
+    background: rgba(99, 102, 241, 0.15);
+    border-color: rgba(99, 102, 241, 0.35);
+    color: #a5b4fc;
+}
+
+/* =========================================
+   TOAST NOTIFICATIONS
+   ========================================= */
+.toast-container {
+    position: fixed;
+    bottom: 32px;
+    left: 210px;
+    transform: translateX(-50%);
+    z-index: 99999;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 8px;
+    pointer-events: none;
+    width: 320px;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    font-size: 12px;
+    font-weight: 600;
+    backdrop-filter: blur(16px);
+    pointer-events: auto;
+    cursor: pointer;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    animation: toast-slide-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.toast.removing {
+    animation: toast-slide-out 0.25s ease forwards;
+}
+
+.toast-error {
+    background: rgba(239, 68, 68, 0.88);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: white;
+}
+
+.toast-success {
+    background: rgba(16, 185, 129, 0.88);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: white;
+}
+
+.toast-info {
+    background: rgba(59, 130, 246, 0.88);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    color: white;
+}
+
+@keyframes toast-slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes toast-slide-out {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(8px) scale(0.95);
+    }
+}
+
+/* =========================================
+   GPS RADAR ANIMATION
+   ========================================= */
+.gps-radar-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1.5px solid rgba(6, 182, 212, 0.6);
+    animation: radar-expand 2s ease-out infinite;
+    pointer-events: none;
+}
+
+.gps-radar-ring:nth-child(2) {
+    animation-delay: 0.7s;
+}
+
+.gps-radar-ring:nth-child(3) {
+    animation-delay: 1.4s;
+}
+
+@keyframes radar-expand {
+    0% {
+        width: 14px;
+        height: 14px;
+        opacity: 0.8;
+        transform: translate(-50%, -50%);
+    }
+
+    100% {
+        width: 52px;
+        height: 52px;
+        opacity: 0;
+        transform: translate(-50%, -50%);
+    }
+}
+
+.gps-radar-container {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
