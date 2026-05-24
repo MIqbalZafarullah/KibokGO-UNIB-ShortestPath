@@ -1,6 +1,6 @@
 // ================================================
 // map.js — Inisialisasi Peta, GPS & Marker
-// SmartRoute UNIB | AI-Powered Campus Navigation
+// KibokGO UNIB | AI-Powered Campus Navigation
 // ================================================
 
 // --- Variabel Global Peta & GPS ---

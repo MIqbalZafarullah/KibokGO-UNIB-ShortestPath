@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartRoute UNIB - AI Navigation System</title>
+    <title>KibokGO UNIB - AI Navigation System</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="assets/css/components.css?v=4"> <!-- 3. Glass, buttons, inputs, toast -->
     <link rel="stylesheet" href="assets/css/map.css?v=4">        <!-- 4. Leaflet & map controls -->
     <link rel="stylesheet" href="assets/css/sidebar.css?v=4">    <!-- 5. Sidebar, stepper, empty state -->
-    <link rel="stylesheet" href="assets/css/journey.css?v=4">    <!-- 6. Journey panel & turn-by-turn -->
+    <link rel="stylesheet" href="assets/css/journey.css?v=6">    <!-- 6. Journey panel & turn-by-turn -->
     <link rel="stylesheet" href="assets/css/theme.css?v=4">      <!-- 7. Light mode overrides -->
 </head>
 
@@ -50,7 +50,7 @@
 
         <!-- Text -->
         <div class="splash-text-block">
-            <h1 class="splash-title">SmartRoute <span class="splash-title-accent">UNIB</span></h1>
+            <h1 class="splash-title">KibokGO <span class="splash-title-accent">UNIB</span></h1>
             <p class="splash-subtitle">AI-POWERED CAMPUS NAVIGATION</p>
         </div>
 
@@ -81,7 +81,7 @@
                         </path>
                     </svg>
                 </div>
-                <h2 class="text-2xl font-extrabold text-white tracking-tight">SmartRoute UNIB</h2>
+                <h2 class="text-2xl font-extrabold text-white tracking-tight">KibokGO UNIB</h2>
                 <p class="text-slate-400 text-sm mt-2">Masuk untuk mengaktifkan fitur AI Navigation premium.</p>
             </div>
 
@@ -164,7 +164,7 @@
                 </div>
             </div>
             <div>
-                <h1 class="text-2xl font-extrabold text-white tracking-tight leading-none mb-1">SmartRoute UNIB</h1>
+                <h1 class="text-2xl font-extrabold text-white tracking-tight leading-none mb-1">KibokGO UNIB</h1>
                 <p class="text-[10px] font-bold tracking-[0.2em] uppercase" style="background: linear-gradient(90deg,#06b6d4,#6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">AI-Powered Navigation</p>
             </div>
         </div>
@@ -358,7 +358,7 @@
                         <span class="jp-active-dot"></span>
                         <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-[0.15em]">Navigasi Aktif</span>
                     </div>
-                    <span class="jp-fastest-badge">⚡ Fastest</span>
+                    <span id="jpFastestBadge" class="jp-fastest-badge">⚡ Tercepat</span>
                 </div>
                 <div class="jp-route-row">
                     <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
@@ -412,6 +412,27 @@
                     </button>
                 </div>
             </div>
+
+            <!-- Block Route / Alternative Route Controls -->
+            <div class="mb-3 p-4 bg-slate-800/40 border border-slate-700/50 rounded-2xl flex flex-col gap-3">
+                <div class="flex flex-col">
+                    <span class="text-xs font-bold text-white flex items-center gap-1.5">
+                        <span>🚧 Jalan Terganggu?</span>
+                    </span>
+                    <span id="jpBlockInfo" class="text-[10px] text-slate-400 mt-0.5">Tekan jika rute sedang macet atau ditutup</span>
+                </div>
+                <div class="flex gap-2">
+                    <button id="jpBlockBtn" onclick="blockCurrentRoute()" class="flex-1 py-2.5 px-4 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
+                        <span>🚧 Blok Rute Ini</span>
+                    </button>
+                    <button id="jpResetBtn" onclick="resetAllBlocks(true)" class="hidden py-2.5 px-4 bg-slate-700/40 hover:bg-slate-700/60 border border-slate-600/50 text-slate-200 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer">
+                        <span>🔄 Reset</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Alternative Route Suggestion Panel (shown after blocking) -->
+            <div id="jpAltSuggestion" class="mb-3 hidden"></div>
 
             <!-- Turn-by-Turn Accordion -->
             <details class="jp-tbt-details">
@@ -488,7 +509,7 @@
     <script src="js/locations.js?v=3"></script> <!-- 2. Data lokasi + autocomplete -->
     <script src="js/auth.js?v=3"></script>      <!-- 3. Sistem login/register -->
     <script src="js/map.js?v=3"></script>       <!-- 4. Peta, GPS, marker -->
-    <script src="js/routing.js?v=3"></script>   <!-- 5. Algoritma & kalkulasi rute -->
+    <script src="js/routing.js?v=7"></script>   <!-- 5. Algoritma & kalkulasi rute -->
     <script src="js/ui.js?v=3"></script>        <!-- 6. Toast, theme, bottom sheet, splash -->
     <script src="js/app.js?v=3"></script>       <!-- 7. Entry point (window.onload) -->
 

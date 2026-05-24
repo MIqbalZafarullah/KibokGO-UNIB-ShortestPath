@@ -1,6 +1,6 @@
 // ================================================
 // locations.js — Data Lokasi & Autocomplete
-// SmartRoute UNIB | AI-Powered Campus Navigation
+// KibokGO UNIB | AI-Powered Campus Navigation
 // ================================================
 
 // Data Lokasi Kampus Universitas Bengkulu (UNIB)

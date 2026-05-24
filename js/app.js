@@ -1,6 +1,6 @@
 // ================================================
 // app.js — Entry Point Utama Aplikasi
-// SmartRoute UNIB | AI-Powered Campus Navigation
+// KibokGO UNIB | AI-Powered Campus Navigation
 // ================================================
 
 window.onload = () => {

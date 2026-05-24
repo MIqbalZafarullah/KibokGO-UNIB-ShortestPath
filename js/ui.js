@@ -1,6 +1,6 @@
 // ================================================
 // ui.js — Animasi UI, Toast, Theme & Bottom Sheet
-// SmartRoute UNIB | AI-Powered Campus Navigation
+// KibokGO UNIB | AI-Powered Campus Navigation
 // ================================================
 
 // -----------------------------------------------

@@ -1,6 +1,6 @@
 // ================================================
 // auth.js — Sistem Autentikasi (Simulasi In-Memory)
-// SmartRoute UNIB | AI-Powered Campus Navigation
+// KibokGO UNIB | AI-Powered Campus Navigation
 // ================================================
 
 const mockDatabase = [];

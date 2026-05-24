@@ -1,7 +1,25 @@
 // ================================================
 // routing.js — Kalkulasi Rute & Tampilan Hasil
-// SmartRoute UNIB | AI-Powered Campus Navigation
+// KibokGO UNIB | AI-Powered Campus Navigation
 // ================================================
+
+// -----------------------------------------------
+// State: Rute Cadangan (Blocked Route)
+// -----------------------------------------------
+let blockedPolylines   = [];   // Layer rute diblokir (garis merah putus) di peta
+let cachedRoutes       = [];   // Semua rute dari OSRM (index 0 = utama, 1,2,3 = alternatif)
+let currentRouteIndex  = 0;    // Indeks rute aktif di cachedRoutes
+let currentRouteCoords = [];   // Koordinat polyline rute yang sedang ditampilkan
+let currentStartId     = null;
+let currentEndId       = null;
+let originalRouteMetres = 0;
+let originalEtaMinutes  = 0;
+let lastOriginCoords    = null;
+let lastActualAlgoStart = null;
+let lastIsGpsStart      = false;
+
+const ALTERNATE_COLORS = ['#f97316', '#a855f7', '#facc15']; // Oranye, Ungu, Kuning
+const MAX_BLOCKED = 3;
 
 // -----------------------------------------------
 // Set Mode Kendaraan
@@ -22,23 +40,32 @@ function setTravelMode(mode) {
 // -----------------------------------------------
 // Proses Kalkulasi Rute (OSRM API)
 // -----------------------------------------------
-async function processRouting() {
+async function processRouting(isAlternative = false) {
     const startId  = document.getElementById('startNode').value;
     const endId    = document.getElementById('endNode').value;
     const errorBox = document.getElementById('errorBox');
 
-    if (!startId || !endId)    { showError('Silakan tentukan titik awal dan tujuan.'); return; }
-    if (startId === endId)     { showError('Titik awal dan tujuan tidak boleh sama.'); return; }
+    if (!startId || !endId)  { showError('Silakan tentukan titik awal dan tujuan.'); return; }
+    if (startId === endId)   { showError('Titik awal dan tujuan tidak boleh sama.'); return; }
+
+    // Pencarian baru: reset semua state
+    if (!isAlternative) {
+        resetAllBlocks(false);
+        cachedRoutes      = [];
+        currentRouteIndex = 0;
+    }
+
+    currentStartId = startId;
+    currentEndId   = endId;
 
     errorBox.classList.add('hidden');
     document.getElementById('journeyPanel').classList.add('hidden');
 
-    // Sembunyikan empty state, tampilkan stepper
     const emptyState = document.getElementById('emptyStatePanel');
     if (emptyState) emptyState.classList.add('hidden');
 
     const btn = document.getElementById('findBtn');
-    btn.innerHTML = `<span class="animate-pulse">Menganalisis...</span>
+    btn.innerHTML = `<span class="animate-pulse">${isAlternative ? 'Mencari rute lain...' : 'Menganalisis...'}</span>
     <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
@@ -48,7 +75,7 @@ async function processRouting() {
     showRouteStepper();
 
     try {
-        let originCoords  = null;
+        let originCoords = null;
         let actualAlgoStart = startId;
 
         if (startId === 'gps') {
@@ -61,7 +88,19 @@ async function processRouting() {
 
         await advanceStepper(1);
         const travelMode = document.getElementById('travelMode').value;
-        const osrmUrl    = `${OSRM_BASE_URL}/${travelMode}/${originCoords.lng},${originCoords.lat};${destCoords.lng},${destCoords.lat}?overview=full&geometries=geojson&steps=true`;
+
+        // ── Jika masih ada cache rute alternatif, TIDAK perlu panggil API lagi ──
+        if (isAlternative && cachedRoutes.length > currentRouteIndex) {
+            // Langsung pakai rute berikutnya dari cache
+            await advanceStepper(2);
+            await advanceStepper(3);
+            displayCachedRoute(currentRouteIndex, travelMode, actualAlgoStart, endId, startId === 'gps', originCoords, true);
+            return;
+        }
+
+        // ── Fetch dari OSRM dengan alternatives=true ──
+        const coordsStr = `${originCoords.lng},${originCoords.lat};${destCoords.lng},${destCoords.lat}`;
+        const osrmUrl   = `${OSRM_BASE_URL}/${travelMode}/${coordsStr}?overview=full&geometries=geojson&steps=true&alternatives=true`;
         const res  = await fetch(osrmUrl);
         const data = await res.json();
 
@@ -71,36 +110,20 @@ async function processRouting() {
 
         await advanceStepper(2);
 
-        const route         = data.routes[0];
-        const distanceMetres = route.distance;
+        // Simpan semua rute dari OSRM (biasanya 1–3 rute)
+        cachedRoutes        = data.routes;
+        lastOriginCoords    = originCoords;
+        lastActualAlgoStart = actualAlgoStart;
+        lastIsGpsStart      = startId === 'gps';
 
-        let etaMinutes = 0, modeText = '', routeColor = '';
-        if (travelMode === 'foot') {
-            etaMinutes = Math.ceil(distanceMetres / TRAVEL_SPEED.foot);
-            modeText   = '🚶 Jalan Kaki';
-            routeColor = ROUTE_COLORS.foot;
-        } else if (travelMode === 'bike') {
-            etaMinutes = Math.ceil(distanceMetres / TRAVEL_SPEED.bike);
-            modeText   = '🏍️ Motor';
-            routeColor = ROUTE_COLORS.bike;
-        } else {
-            etaMinutes = Math.ceil(distanceMetres / TRAVEL_SPEED.car) + 1;
-            modeText   = '🚗 Mobil';
-            routeColor = ROUTE_COLORS.car;
-        }
-        if (etaMinutes < 1) etaMinutes = 1;
-
-        const distText       = distanceMetres >= 1000 ? (distanceMetres / 1000).toFixed(2) + ' km' : Math.round(distanceMetres) + ' m';
-        const polylineCoords = route.geometry.coordinates.map(c => [c[1], c[0]]);
-
-        // Override warna rute jika Night Mode aktif
-        if (typeof isNightMode !== 'undefined' && isNightMode) {
-            routeColor = '#3b82f6'; // biru untuk mode malam
-        }
+        // Simpan jarak & ETA rute pertama untuk perbandingan
+        const firstRoute = cachedRoutes[0];
+        originalRouteMetres = firstRoute.distance;
+        const firstEta = calcEta(firstRoute.distance, travelMode);
+        originalEtaMinutes  = firstEta;
 
         await advanceStepper(3);
-        drawRouteReal(polylineCoords, actualAlgoStart, endId, startId === 'gps', originCoords, routeColor);
-        showResult(distText, etaMinutes, modeText, route.legs[0].steps, startId, endId);
+        displayCachedRoute(0, travelMode, actualAlgoStart, endId, startId === 'gps', originCoords, false);
 
     } catch (e) {
         showError(e.message);
@@ -108,6 +131,131 @@ async function processRouting() {
     } finally {
         resetButton();
         hideRouteStepper();
+    }
+}
+
+// -----------------------------------------------
+// Helper: hitung ETA dari jarak & mode
+// -----------------------------------------------
+function calcEta(metres, mode) {
+    if (mode === 'foot') return Math.max(1, Math.ceil(metres / TRAVEL_SPEED.foot));
+    if (mode === 'bike') return Math.max(1, Math.ceil(metres / TRAVEL_SPEED.bike));
+    return Math.max(1, Math.ceil(metres / TRAVEL_SPEED.car) + 1);
+}
+
+// -----------------------------------------------
+// Tampilkan rute dari cache (tanpa fetch ulang)
+// -----------------------------------------------
+function displayCachedRoute(idx, travelMode, actualAlgoStart, endId, isGpsStart, originCoords, isAlternative) {
+    const route          = cachedRoutes[idx];
+    const distanceMetres = route.distance;
+    const etaMinutes     = calcEta(distanceMetres, travelMode);
+
+    let modeText = '', routeColor = '';
+    if (travelMode === 'foot')       { modeText = '🚶 Jalan Kaki'; routeColor = ROUTE_COLORS.foot; }
+    else if (travelMode === 'bike') { modeText = '🏍️ Motor';   routeColor = ROUTE_COLORS.bike; }
+    else                             { modeText = '🚗 Mobil';   routeColor = ROUTE_COLORS.car;  }
+
+    // Rute alternatif pakai warna berbeda
+    if (isAlternative && idx > 0) {
+        routeColor = ALTERNATE_COLORS[(idx - 1) % ALTERNATE_COLORS.length];
+    }
+
+    if (typeof isNightMode !== 'undefined' && isNightMode) routeColor = '#3b82f6';
+
+    const distText       = distanceMetres >= 1000 ? (distanceMetres / 1000).toFixed(2) + ' km' : Math.round(distanceMetres) + ' m';
+    const polylineCoords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+
+    currentRouteCoords = polylineCoords;
+
+    drawRouteReal(polylineCoords, actualAlgoStart, endId, isGpsStart, originCoords, routeColor);
+    showResult(distText, etaMinutes, modeText, route.legs[0].steps, currentStartId, endId, isAlternative, distanceMetres);
+}
+
+// -----------------------------------------------
+// Blokir Rute Aktif & Tampilkan Rute Cadangan
+// -----------------------------------------------
+function blockCurrentRoute() {
+    if (currentRouteCoords.length === 0) {
+        showToast('Tidak ada rute aktif untuk diblokir.', 'error');
+        return;
+    }
+
+    const nextIdx = currentRouteIndex + 1;
+
+    if (nextIdx >= cachedRoutes.length) {
+        showToast('❌ Tidak ada rute alternatif lain yang tersedia untuk jalur ini.', 'error');
+        return;
+    }
+    if (currentRouteIndex >= MAX_BLOCKED) {
+        showToast(`⚠️ Maksimum ${MAX_BLOCKED} rute cadangan telah tercapai.`, 'error');
+        return;
+    }
+
+    // Gambar rute yang diblokir sebagai garis merah putus-putus
+    const midCoord = currentRouteCoords[Math.floor(currentRouteCoords.length / 2)];
+    const blockedLayer = L.polyline(currentRouteCoords, {
+        color:     '#ef4444',
+        weight:    4,
+        opacity:   0.55,
+        dashArray: '10, 8',
+        lineJoin:  'round',
+    }).addTo(map);
+
+    const blockadeIcon = L.divIcon({
+        className: '',
+        html: `<div style="
+            background:rgba(239,68,68,0.9);
+            border:2px solid #fca5a5;
+            border-radius:8px;
+            padding:3px 7px;
+            font-size:12px;
+            font-weight:800;
+            color:white;
+            white-space:nowrap;
+            box-shadow:0 2px 8px rgba(0,0,0,0.4);
+            backdrop-filter:blur(4px);
+        ">🚧 Diblokir</div>`,
+        iconAnchor: [45, 16],
+    });
+    const blockMarker = L.marker([midCoord[0], midCoord[1]], { icon: blockadeIcon }).addTo(map);
+    blockedPolylines.push({ layer: blockedLayer, marker: blockMarker });
+
+    // Pindah ke rute berikutnya dari cache
+    currentRouteIndex = nextIdx;
+    currentRouteCoords = [];
+
+    showToast(`🚧 Rute diblokir! Menampilkan rute cadangan ke-${currentRouteIndex + 1}...`, 'info');
+
+    const travelMode = document.getElementById('travelMode').value;
+    displayCachedRoute(
+        currentRouteIndex,
+        travelMode,
+        lastActualAlgoStart,
+        currentEndId,
+        lastIsGpsStart,
+        lastOriginCoords,
+        true
+    );
+}
+
+// -----------------------------------------------
+// Reset Semua Blokir
+// -----------------------------------------------
+function resetAllBlocks(triggerReRoute = true) {
+    blockedPolylines.forEach(({ layer, marker }) => {
+        if (map && map.hasLayer(layer))  map.removeLayer(layer);
+        if (map && map.hasLayer(marker)) map.removeLayer(marker);
+    });
+    blockedPolylines   = [];
+    currentRouteIndex  = 0;
+    currentRouteCoords = [];
+    // cachedRoutes tetap dipertahankan agar reset bisa langsung tampilkan rute pertama
+
+    if (triggerReRoute && currentStartId && currentEndId && cachedRoutes.length > 0) {
+        showToast('🔄 Semua blokir direset. Kembali ke rute utama...', 'info');
+        const travelMode = document.getElementById('travelMode').value;
+        displayCachedRoute(0, travelMode, lastActualAlgoStart, currentEndId, lastIsGpsStart, lastOriginCoords, false);
     }
 }
 
@@ -169,7 +317,7 @@ function hideRouteStepper() {
 // -----------------------------------------------
 // Tampilkan Hasil Rute
 // -----------------------------------------------
-function showResult(distText, etaMinutes, modeText, steps, startId, endId) {
+function showResult(distText, etaMinutes, modeText, steps, startId, endId, isAlternative = false, distanceMetres = 0) {
     document.getElementById('journeyPanel').classList.remove('hidden');
 
     // Auto expand bottom sheet di mobile
@@ -188,11 +336,89 @@ function showResult(distText, etaMinutes, modeText, steps, startId, endId) {
     document.getElementById('jpDistance').innerText   = distText;
     document.getElementById('jpMode').innerText       = modeText;
 
+    // Update badge rute (Rute Utama / Rute ke-X)
+    const fastestBadge = document.getElementById('jpFastestBadge');
+    if (fastestBadge) {
+        if (currentRouteIndex === 0) {
+            fastestBadge.textContent = '⚡ Tercepat';
+            fastestBadge.className   = 'jp-fastest-badge';
+        } else {
+            fastestBadge.textContent = `🔄 Rute ke-${currentRouteIndex + 1}`;
+            fastestBadge.style.cssText = 'font-size:10px;font-weight:800;padding:3px 10px;border-radius:999px;background:rgba(249,115,22,0.15);color:#fb923c;border:1px solid rgba(249,115,22,0.4);letter-spacing:0.05em;';
+        }
+    }
+
+    // Tampilkan / sembunyikan tombol blokir & reset
+    const blockBtn  = document.getElementById('jpBlockBtn');
+    const resetBtn  = document.getElementById('jpResetBtn');
+    const blockInfo = document.getElementById('jpBlockInfo');
+    if (blockBtn) {
+        blockBtn.classList.remove('hidden');
+        // Disable jika sudah maksimum blokir
+        const remaining = MAX_BLOCKED - blockedWaypoints.length;
+        blockBtn.disabled = (remaining <= 0);
+        blockBtn.title = remaining > 0 ? `Sisa ${remaining} rute cadangan` : 'Batas blokir tercapai';
+    }
+    if (resetBtn) {
+        if (blockedWaypoints.length > 0) resetBtn.classList.remove('hidden');
+        else resetBtn.classList.add('hidden');
+    }
+    if (blockInfo) {
+        blockInfo.textContent = blockedWaypoints.length > 0
+            ? `${blockedWaypoints.length} rute diblokir • Sisa ${MAX_BLOCKED - blockedWaypoints.length} cadangan`
+            : 'Tekan jika rute sedang macet atau ditutup';
+    }
+
+    // ── Panel saran rute cadangan ──
+    const altPanel = document.getElementById('jpAltSuggestion');
+    if (altPanel) {
+        if (isAlternative && originalRouteMetres > 0 && distanceMetres > 0) {
+            const deltaMetre = Math.round(distanceMetres - originalRouteMetres);
+            const deltaEta   = etaMinutes - originalEtaMinutes;
+            const deltaDistStr = deltaMetre >= 0
+                ? `+${deltaMetre >= 1000 ? (deltaMetre/1000).toFixed(1)+'km' : deltaMetre+'m'} lebih panjang`
+                : `${Math.abs(deltaMetre)}m lebih pendek`;
+            const deltaEtaStr = deltaEta > 0 ? `+${deltaEta} mnt` : deltaEta < 0 ? `${deltaEta} mnt` : 'sama';
+            const altColor    = ALTERNATE_COLORS[(currentRouteIndex - 1) % ALTERNATE_COLORS.length];
+
+            altPanel.innerHTML = `
+                <div class="jp-alt-suggestion-inner" style="border-left:3px solid ${altColor}">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span style="color:${altColor};font-size:16px;">🗺️</span>
+                        <span class="text-xs font-extrabold" style="color:${altColor};">Rute Cadangan ke-${currentRouteIndex + 1} Ditemukan!</span>
+                    </div>
+                    <div class="flex gap-3 flex-wrap">
+                        <span class="jp-alt-chip">
+                            <span style="opacity:.6;font-size:9px;">JARAK</span>
+                            <strong>${distText}</strong>
+                        </span>
+                        <span class="jp-alt-chip" style="color:#f87171;">
+                            <span style="opacity:.6;font-size:9px;">DELTA</span>
+                            <strong>${deltaDistStr}</strong>
+                        </span>
+                        <span class="jp-alt-chip" style="color:#fb923c;">
+                            <span style="opacity:.6;font-size:9px;">WAKTU</span>
+                            <strong>${deltaEtaStr}</strong>
+                        </span>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-2">Rute ini menghindari jalur yang diblokir sebelumnya.</p>
+                </div>`;
+            altPanel.classList.remove('hidden');
+
+            // Toast saran
+            const sign = deltaMetre >= 0 ? '+' : '';
+            showToast(`🗺️ Rute cadangan ke-${currentRouteIndex + 1}: ${distText} (${sign}${deltaMetre}m, ${deltaEtaStr})`, 'info');
+        } else {
+            altPanel.innerHTML = '';
+            altPanel.classList.add('hidden');
+        }
+    }
+
     showDestinationInfo(endId);
 
     document.getElementById('jpShareBtn').onclick = () => {
-        const msg = `Rute ke ${endName} via SmartRoute UNIB — ${distText}, ~${etaMinutes} mnt`;
-        if (navigator.share) navigator.share({ title: 'SmartRoute UNIB', text: msg });
+        const msg = `Rute ke ${endName} via KibokGO UNIB — ${distText}, ~${etaMinutes} mnt`;
+        if (navigator.share) navigator.share({ title: 'KibokGO UNIB', text: msg });
         else { navigator.clipboard?.writeText(msg); showToast('Info rute disalin!', 'success'); }
     };
 

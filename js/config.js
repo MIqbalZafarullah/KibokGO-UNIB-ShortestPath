@@ -1,6 +1,6 @@
 // ================================================
 // config.js — Konstanta & Konfigurasi Global
-// SmartRoute UNIB | AI-Powered Campus Navigation
+// KibokGO UNIB | AI-Powered Campus Navigation
 // ================================================
 
 const MAP_CONFIG = {
@@ -15,9 +15,9 @@ const TRAVEL_SPEED = {
 };
 
 const ROUTE_COLORS = {
-    foot: '#34d399',  // hijau
+    foot: '#43dee9ff',  // hijau
     bike: '#fbbf24',  // kuning
-    car:  '#3b82f6',  // biru
+    car: '#f63bdaff',  // biru
 };
 
 const OSRM_BASE_URL = 'https://router.project-osrm.org/route/v1';

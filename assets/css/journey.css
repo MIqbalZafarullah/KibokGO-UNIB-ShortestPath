@@ -190,3 +190,78 @@
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
+
+/* =============================================
+   BLOCK ROUTE / ALTERNATIVE ROUTE CONTROLS
+   ============================================= */
+
+/* Block button: pulse border saat rute aktif */
+#jpBlockBtn {
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+#jpBlockBtn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: linear-gradient(90deg, transparent, rgba(239,68,68,0.12), transparent);
+    transform: translateX(-100%);
+    animation: block-shimmer 2.2s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes block-shimmer {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(200%); }
+}
+
+/* Disabled state (max blocks reached) */
+#jpBlockBtn:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+#jpBlockBtn:disabled::before {
+    animation: none;
+}
+
+/* Reset button entrance animation */
+#jpResetBtn {
+    transition: all 0.25s ease;
+}
+
+#jpResetBtn:not(.hidden) {
+    animation: fadeIn 0.35s ease-out;
+}
+
+/* =============================================
+   ALTERNATIVE ROUTE SUGGESTION PANEL
+   ============================================= */
+
+.jp-alt-suggestion-inner {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 14px;
+    padding: 14px 16px;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.jp-alt-chip {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 1px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 800;
+    color: #e2e8f0;
+    min-width: 64px;
+    text-align: center;
+    line-height: 1.4;
+}
