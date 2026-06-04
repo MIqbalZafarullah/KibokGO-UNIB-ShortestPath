@@ -1,5 +1,3 @@
-// Graph definition for Universitas Bengkulu (UNIB) Campus
-// Distance weights are calculated based on approximate physical distance in meters.
 const DIJKSTRA_GRAPH = {
     'rektorat': { 'parkir_rektorat': 55, 'glt': 97, 'gb2': 212, 'gerbang': 196 },
     'glt': { 'rektorat': 97, 'parkir_rektorat': 54, 'gb2': 227, 'mushola': 188 },
@@ -32,12 +30,6 @@ const DIJKSTRA_GRAPH = {
     'parkir_rektorat': { 'rektorat': 55, 'glt': 54, 'atm': 168, 'gerbang': 240 }
 };
 
-/**
- * Runs Dijkstra's shortest path algorithm
- * @param {string} startId - ID of start node
- * @param {string} endId - ID of destination node
- * @returns {object} - { path: array, distance: number, logs: array }
- */
 function runDijkstra(startId, endId) {
     const distances = {};
     const predecessors = {};
@@ -45,7 +37,6 @@ function runDijkstra(startId, endId) {
     const queue = [];
     const stepsLog = [];
 
-    // Ensure the nodes exist in the graph
     if (!DIJKSTRA_GRAPH[startId] || !DIJKSTRA_GRAPH[endId]) {
         return {
             found: false,
@@ -55,7 +46,6 @@ function runDijkstra(startId, endId) {
         };
     }
 
-    // Initialization
     for (const node in DIJKSTRA_GRAPH) {
         distances[node] = Infinity;
         predecessors[node] = null;
@@ -66,7 +56,6 @@ function runDijkstra(startId, endId) {
     stepsLog.push(`[Mulai] Inisialisasi: Jarak ke ${nodes[startId]?.name || startId} = 0 m, lainnya = ∞ m.`);
 
     while (queue.length > 0) {
-        // Sort queue to get node with minimum distance (simulates Priority Queue)
         queue.sort((a, b) => a.dist - b.dist);
         const current = queue.shift();
         const u = current.id;
@@ -104,7 +93,6 @@ function runDijkstra(startId, endId) {
         }
     }
 
-    // Reconstruct path
     const path = [];
     let curr = endId;
     while (curr !== null) {
@@ -113,7 +101,7 @@ function runDijkstra(startId, endId) {
     }
 
     const found = path[0] === startId;
-    
+
     if (found) {
         stepsLog.push(`[Selesai] Rute terpendek ditemukan: ${path.map(n => nodes[n]?.name || n).join(' ➜ ')} (Total Jarak: ${distances[endId]} m).`);
     } else {
