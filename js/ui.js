@@ -35,9 +35,6 @@ function resetButton() {
     </svg>`;
 }
 
-// -----------------------------------------------
-// Night Mode Toggle (hanya peta yang berubah)
-// -----------------------------------------------
 let isNightMode = false;
 
 function toggleTheme() {
@@ -48,47 +45,40 @@ function toggleTheme() {
     const btn    = document.getElementById('themeToggleBtn');
 
     if (isNightMode) {
-        // Aktifkan Night Mode: filter dark hanya ke peta
+
         mapEl.classList.add('map-night-mode');
 
-        // Ikon berubah ke bulan
         iconEl.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />`;
-        btn.style.color = '#818cf8'; // indigo untuk mode malam
+        btn.style.color = '#818cf8';
 
         showToast('Mode Malam aktif 🌙', 'info');
     } else {
-        // Matikan Night Mode
+
         mapEl.classList.remove('map-night-mode');
 
-        // Ikon kembali ke matahari
         iconEl.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />`;
-        btn.style.color = ''; // reset ke warna CSS semula (kuning)
+        btn.style.color = '';
 
         showToast('Mode Siang aktif ☀️', 'info');
     }
 
-    // Re-draw rute (jika sedang aktif) dengan warna sesuai mode
     redrawRouteForCurrentMode();
 }
 
 function redrawRouteForCurrentMode() {
-    if (!routeLayer) return; // tidak ada rute aktif
+    if (!routeLayer) return;
 
-    // Ambil warna baru berdasarkan mode
     const newColor = isNightMode ? '#3b82f6' : getCurrentDayRouteColor();
     routeLayer.setStyle({ color: newColor });
 }
 
 function getCurrentDayRouteColor() {
-    // Baca mode kendaraan aktif dan kembalikan warna siang
+
     const mode = document.getElementById('travelMode')?.value || 'foot';
     return ROUTE_COLORS[mode];
 }
 
-// -----------------------------------------------
-// Bottom Sheet (Mobile Collapsible Panel)
-// -----------------------------------------------
-let sheetState  = 'half'; // 'collapsed' | 'half' | 'full'
+let sheetState  = 'half';
 let sheetStartY = 0;
 let sheetCurrentY = 0;
 
@@ -118,7 +108,7 @@ function initBottomSheet() {
         sidebar.style.transition = '';
 
         if (sheetCurrentY === 0) {
-            // Tap tanpa gerak
+
             if (sheetState === 'collapsed') updateSheetState('half');
             else if (sheetState === 'half') updateSheetState('full');
             else updateSheetState('half');
@@ -142,9 +132,6 @@ function initBottomSheet() {
     });
 }
 
-// -----------------------------------------------
-// Ripple Effect pada Tombol
-// -----------------------------------------------
 function initRippleEffect() {
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('.btn-gradient, .segment-btn, .map-toggle-btn');
@@ -163,9 +150,6 @@ function initRippleEffect() {
     });
 }
 
-// -----------------------------------------------
-// Splash Screen
-// -----------------------------------------------
 function initSplashScreen() {
     const splash      = document.getElementById('splashScreen');
     const bar         = document.getElementById('splashProgressBar');
@@ -199,9 +183,6 @@ function initSplashScreen() {
     }, 130);
 }
 
-// -----------------------------------------------
-// Inisialisasi Aplikasi Utama
-// -----------------------------------------------
 function initApp() {
     initMap();
     updateUIBasedOnAuth();

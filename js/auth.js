@@ -1,8 +1,3 @@
-// ================================================
-// auth.js — Sistem Autentikasi (Simulasi In-Memory)
-// KibokGO UNIB | AI-Powered Campus Navigation
-// ================================================
-
 const mockDatabase = [];
 let currentUser = null;
 
@@ -69,7 +64,7 @@ function updateUIBasedOnAuth() {
     const authBtn  = document.getElementById('authBtn');
 
     if (currentUser) {
-        // --- LOGGED IN STATE ---
+
         document.getElementById('userNameDisplay').innerText = currentUser.username;
         userInit.innerText   = currentUser.username.charAt(0).toUpperCase();
         userInit.className   = 'w-9 h-9 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-cyan-500/30 avatar-premium';
@@ -83,11 +78,10 @@ function updateUIBasedOnAuth() {
         authBtn.onmouseover    = () => authBtn.style.background = 'rgba(239,68,68,0.3)';
         authBtn.onmouseout     = () => authBtn.style.background = 'rgba(239,68,68,0.12)';
 
-        // Auto-start GPS in background
         setTimeout(() => requestLocation(), 800);
 
     } else {
-        // --- GUEST STATE ---
+
         document.getElementById('userNameDisplay').innerText = 'Tamu';
         userInit.innerText   = '?';
         userInit.className   = 'w-9 h-9 bg-slate-800 rounded-full flex items-center justify-center text-slate-400 font-bold text-sm border border-slate-700 shadow-inner';

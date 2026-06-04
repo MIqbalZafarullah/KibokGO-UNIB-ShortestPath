@@ -1,9 +1,3 @@
-/* =============================================
-   JOURNEY.CSS — Journey Panel, Destination Card,
-   Turn-by-Turn Accordion
-   ============================================= */
-
-/* Panel Header */
 .journey-panel-header {
     background: rgba(15, 23, 42, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.07);
@@ -51,7 +45,6 @@
     line-height: 1.3;
 }
 
-/* Metrics Grid — ETA tall left, Distance+Mode stacked right */
 .jp-metrics-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -85,7 +78,6 @@
     font-weight: 800;
 }
 
-/* Destination Card */
 .jp-dest-card {
     background: rgba(15, 23, 42, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.07);
@@ -140,7 +132,6 @@
     border-color: rgba(99, 102, 241, 0.5);
 }
 
-/* Turn-by-Turn Accordion */
 .jp-tbt-details {
     background: rgba(15, 23, 42, 0.55);
     border: 1px solid rgba(255, 255, 255, 0.06);
@@ -191,11 +182,6 @@
     scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
-/* =============================================
-   BLOCK ROUTE / ALTERNATIVE ROUTE CONTROLS
-   ============================================= */
-
-/* Block button: pulse border saat rute aktif */
 #jpBlockBtn {
     transition: all 0.25s ease;
     position: relative;
@@ -218,7 +204,6 @@
     100% { transform: translateX(200%); }
 }
 
-/* Disabled state (max blocks reached) */
 #jpBlockBtn:disabled {
     opacity: 0.38;
     cursor: not-allowed;
@@ -229,7 +214,6 @@
     animation: none;
 }
 
-/* Reset button entrance animation */
 #jpResetBtn {
     transition: all 0.25s ease;
 }
@@ -237,10 +221,6 @@
 #jpResetBtn:not(.hidden) {
     animation: fadeIn 0.35s ease-out;
 }
-
-/* =============================================
-   ALTERNATIVE ROUTE SUGGESTION PANEL
-   ============================================= */
 
 .jp-alt-suggestion-inner {
     background: rgba(15, 23, 42, 0.7);

@@ -1,15 +1,7 @@
-// ================================================
-// routing.js — Kalkulasi Rute & Tampilan Hasil
-// KibokGO UNIB | AI-Powered Campus Navigation
-// ================================================
-
-// -----------------------------------------------
-// State: Rute Cadangan (Blocked Route)
-// -----------------------------------------------
-let blockedPolylines   = [];   // Layer rute diblokir (garis merah putus) di peta
-let cachedRoutes       = [];   // Semua rute dari OSRM (index 0 = utama, 1,2,3 = alternatif)
-let currentRouteIndex  = 0;    // Indeks rute aktif di cachedRoutes
-let currentRouteCoords = [];   // Koordinat polyline rute yang sedang ditampilkan
+let blockedPolylines   = [];
+let cachedRoutes       = [];
+let currentRouteIndex  = 0;
+let currentRouteCoords = [];
 let currentStartId     = null;
 let currentEndId       = null;
 let originalRouteMetres = 0;
@@ -18,12 +10,9 @@ let lastOriginCoords    = null;
 let lastActualAlgoStart = null;
 let lastIsGpsStart      = false;
 
-const ALTERNATE_COLORS = ['#f97316', '#a855f7', '#facc15']; // Oranye, Ungu, Kuning
+const ALTERNATE_COLORS = ['#f97316', '#a855f7', '#facc15'];
 const MAX_BLOCKED = 3;
 
-// -----------------------------------------------
-// Set Mode Kendaraan
-// -----------------------------------------------
 function setTravelMode(mode) {
     document.getElementById('travelMode').value = mode;
     ['foot', 'bike', 'car'].forEach(m => {
@@ -37,9 +26,6 @@ function setTravelMode(mode) {
     }
 }
 
-// -----------------------------------------------
-// Proses Kalkulasi Rute (OSRM API)
-// -----------------------------------------------
 async function processRouting(isAlternative = false) {
     const startId  = document.getElementById('startNode').value;
     const endId    = document.getElementById('endNode').value;
@@ -48,7 +34,6 @@ async function processRouting(isAlternative = false) {
     if (!startId || !endId)  { showError('Silakan tentukan titik awal dan tujuan.'); return; }
     if (startId === endId)   { showError('Titik awal dan tujuan tidak boleh sama.'); return; }
 
-    // Pencarian baru: reset semua state
     if (!isAlternative) {
         resetAllBlocks(false);
         cachedRoutes      = [];
@@ -89,16 +74,14 @@ async function processRouting(isAlternative = false) {
         await advanceStepper(1);
         const travelMode = document.getElementById('travelMode').value;
 
-        // ── Jika masih ada cache rute alternatif, TIDAK perlu panggil API lagi ──
         if (isAlternative && cachedRoutes.length > currentRouteIndex) {
-            // Langsung pakai rute berikutnya dari cache
+
             await advanceStepper(2);
             await advanceStepper(3);
             displayCachedRoute(currentRouteIndex, travelMode, actualAlgoStart, endId, startId === 'gps', originCoords, true);
             return;
         }
 
-        // ── Fetch dari OSRM dengan alternatives=true ──
         const coordsStr = `${originCoords.lng},${originCoords.lat};${destCoords.lng},${destCoords.lat}`;
         const osrmUrl   = `${OSRM_BASE_URL}/${travelMode}/${coordsStr}?overview=full&geometries=geojson&steps=true&alternatives=true`;
         const res  = await fetch(osrmUrl);
@@ -110,13 +93,11 @@ async function processRouting(isAlternative = false) {
 
         await advanceStepper(2);
 
-        // Simpan semua rute dari OSRM (biasanya 1–3 rute)
         cachedRoutes        = data.routes;
         lastOriginCoords    = originCoords;
         lastActualAlgoStart = actualAlgoStart;
         lastIsGpsStart      = startId === 'gps';
 
-        // Simpan jarak & ETA rute pertama untuk perbandingan
         const firstRoute = cachedRoutes[0];
         originalRouteMetres = firstRoute.distance;
         const firstEta = calcEta(firstRoute.distance, travelMode);
@@ -134,18 +115,12 @@ async function processRouting(isAlternative = false) {
     }
 }
 
-// -----------------------------------------------
-// Helper: hitung ETA dari jarak & mode
-// -----------------------------------------------
 function calcEta(metres, mode) {
     if (mode === 'foot') return Math.max(1, Math.ceil(metres / TRAVEL_SPEED.foot));
     if (mode === 'bike') return Math.max(1, Math.ceil(metres / TRAVEL_SPEED.bike));
     return Math.max(1, Math.ceil(metres / TRAVEL_SPEED.car) + 1);
 }
 
-// -----------------------------------------------
-// Tampilkan rute dari cache (tanpa fetch ulang)
-// -----------------------------------------------
 function displayCachedRoute(idx, travelMode, actualAlgoStart, endId, isGpsStart, originCoords, isAlternative) {
     const route          = cachedRoutes[idx];
     const distanceMetres = route.distance;
@@ -156,7 +131,6 @@ function displayCachedRoute(idx, travelMode, actualAlgoStart, endId, isGpsStart,
     else if (travelMode === 'bike') { modeText = '🏍️ Motor';   routeColor = ROUTE_COLORS.bike; }
     else                             { modeText = '🚗 Mobil';   routeColor = ROUTE_COLORS.car;  }
 
-    // Rute alternatif pakai warna berbeda
     if (isAlternative && idx > 0) {
         routeColor = ALTERNATE_COLORS[(idx - 1) % ALTERNATE_COLORS.length];
     }
@@ -172,9 +146,6 @@ function displayCachedRoute(idx, travelMode, actualAlgoStart, endId, isGpsStart,
     showResult(distText, etaMinutes, modeText, route.legs[0].steps, currentStartId, endId, isAlternative, distanceMetres);
 }
 
-// -----------------------------------------------
-// Blokir Rute Aktif & Tampilkan Rute Cadangan
-// -----------------------------------------------
 function blockCurrentRoute() {
     if (currentRouteCoords.length === 0) {
         showToast('Tidak ada rute aktif untuk diblokir.', 'error');
@@ -192,7 +163,6 @@ function blockCurrentRoute() {
         return;
     }
 
-    // Gambar rute yang diblokir sebagai garis merah putus-putus
     const midCoord = currentRouteCoords[Math.floor(currentRouteCoords.length / 2)];
     const blockedLayer = L.polyline(currentRouteCoords, {
         color:     '#ef4444',
@@ -221,7 +191,6 @@ function blockCurrentRoute() {
     const blockMarker = L.marker([midCoord[0], midCoord[1]], { icon: blockadeIcon }).addTo(map);
     blockedPolylines.push({ layer: blockedLayer, marker: blockMarker });
 
-    // Pindah ke rute berikutnya dari cache
     currentRouteIndex = nextIdx;
     currentRouteCoords = [];
 
@@ -239,9 +208,6 @@ function blockCurrentRoute() {
     );
 }
 
-// -----------------------------------------------
-// Reset Semua Blokir
-// -----------------------------------------------
 function resetAllBlocks(triggerReRoute = true) {
     blockedPolylines.forEach(({ layer, marker }) => {
         if (map && map.hasLayer(layer))  map.removeLayer(layer);
@@ -250,7 +216,6 @@ function resetAllBlocks(triggerReRoute = true) {
     blockedPolylines   = [];
     currentRouteIndex  = 0;
     currentRouteCoords = [];
-    // cachedRoutes tetap dipertahankan agar reset bisa langsung tampilkan rute pertama
 
     if (triggerReRoute && currentStartId && currentEndId && cachedRoutes.length > 0) {
         showToast('🔄 Semua blokir direset. Kembali ke rute utama...', 'info');
@@ -259,9 +224,6 @@ function resetAllBlocks(triggerReRoute = true) {
     }
 }
 
-// -----------------------------------------------
-// Progress Stepper
-// -----------------------------------------------
 const STEPPER_STEPS = [
     { icon: '📡', label: 'Menghubungkan Server',   sub: 'Mengakses OSRM routing engine...' },
     { icon: '🧭', label: 'Menemukan Jalur',         sub: 'AI menganalisis rute terpendek...' },
@@ -314,13 +276,9 @@ function hideRouteStepper() {
     if (card) setTimeout(() => card.classList.add('hidden'), 500);
 }
 
-// -----------------------------------------------
-// Tampilkan Hasil Rute
-// -----------------------------------------------
 function showResult(distText, etaMinutes, modeText, steps, startId, endId, isAlternative = false, distanceMetres = 0) {
     document.getElementById('journeyPanel').classList.remove('hidden');
 
-    // Auto expand bottom sheet di mobile
     if (window.innerWidth <= 768) updateSheetState('full');
 
     const now = new Date();
@@ -336,7 +294,6 @@ function showResult(distText, etaMinutes, modeText, steps, startId, endId, isAlt
     document.getElementById('jpDistance').innerText   = distText;
     document.getElementById('jpMode').innerText       = modeText;
 
-    // Update badge rute (Rute Utama / Rute ke-X)
     const fastestBadge = document.getElementById('jpFastestBadge');
     if (fastestBadge) {
         if (currentRouteIndex === 0) {
@@ -348,13 +305,12 @@ function showResult(distText, etaMinutes, modeText, steps, startId, endId, isAlt
         }
     }
 
-    // Tampilkan / sembunyikan tombol blokir & reset
     const blockBtn  = document.getElementById('jpBlockBtn');
     const resetBtn  = document.getElementById('jpResetBtn');
     const blockInfo = document.getElementById('jpBlockInfo');
     if (blockBtn) {
         blockBtn.classList.remove('hidden');
-        // Disable jika sudah maksimum blokir
+
         const remaining = MAX_BLOCKED - blockedWaypoints.length;
         blockBtn.disabled = (remaining <= 0);
         blockBtn.title = remaining > 0 ? `Sisa ${remaining} rute cadangan` : 'Batas blokir tercapai';
@@ -369,7 +325,6 @@ function showResult(distText, etaMinutes, modeText, steps, startId, endId, isAlt
             : 'Tekan jika rute sedang macet atau ditutup';
     }
 
-    // ── Panel saran rute cadangan ──
     const altPanel = document.getElementById('jpAltSuggestion');
     if (altPanel) {
         if (isAlternative && originalRouteMetres > 0 && distanceMetres > 0) {
@@ -405,7 +360,6 @@ function showResult(distText, etaMinutes, modeText, steps, startId, endId, isAlt
                 </div>`;
             altPanel.classList.remove('hidden');
 
-            // Toast saran
             const sign = deltaMetre >= 0 ? '+' : '';
             showToast(`🗺️ Rute cadangan ke-${currentRouteIndex + 1}: ${distText} (${sign}${deltaMetre}m, ${deltaEtaStr})`, 'info');
         } else {
@@ -422,7 +376,6 @@ function showResult(distText, etaMinutes, modeText, steps, startId, endId, isAlt
         else { navigator.clipboard?.writeText(msg); showToast('Info rute disalin!', 'success'); }
     };
 
-    // Turn-by-turn navigation steps
     const tbtList = document.getElementById('turnByTurnList');
     if (steps && steps.length > 0) {
         tbtList.innerHTML = '';
@@ -457,9 +410,6 @@ function showResult(distText, etaMinutes, modeText, steps, startId, endId, isAlt
     setTimeout(() => document.getElementById('journeyPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 300);
 }
 
-// -----------------------------------------------
-// Informasi Destinasi
-// -----------------------------------------------
 function showDestinationInfo(endId) {
     const destNode = nodes[endId];
     if (!destNode) return;

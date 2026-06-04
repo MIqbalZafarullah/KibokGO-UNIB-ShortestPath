@@ -1,15 +1,8 @@
-// ================================================
-// map.js — Inisialisasi Peta, GPS & Marker
-// KibokGO UNIB | AI-Powered Campus Navigation
-// ================================================
-
-// --- Variabel Global Peta & GPS ---
 let map, routeLayer, startMarkerObj, endMarkerObj, osmLayer, satelliteLayer;
 let gpsWatchId    = null;
 let userLocation  = null;
 let userMarkerObj = null;
 
-// --- Ikon Marker Kustom ---
 const startIcon = L.divIcon({
     className: 'custom-div-icon',
     html: `<svg viewBox="0 0 24 36" width="32" height="48" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.4));"><path d="M12 0C5.37 0 0 5.37 0 12c0 7.5 9.5 20.5 11.2 23.1.4.6 1.2.6 1.6 0C14.5 32.5 24 19.5 24 12c0-6.63-5.37-12-12-12z" fill="#10b981"/><circle cx="12" cy="11.5" r="4.5" fill="#064e3b"/></svg>`,
@@ -46,13 +39,8 @@ const gpsIcon = L.divIcon({
     iconAnchor: [16, 16],
 });
 
-// -----------------------------------------------
-// Inisialisasi Peta
-// -----------------------------------------------
 function initMap() {
     map = L.map('map', { zoomControl: false }).setView(MAP_CONFIG.center, MAP_CONFIG.zoom);
-    // Zoom control ditangani oleh custom buttons di HTML (bukan Leaflet default)
-
 
     osmLayer       = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap', maxZoom: 19 });
     satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri', maxZoom: 19 });
@@ -62,15 +50,9 @@ function initMap() {
     setupAutocomplete('endSearch',   'endDropdown',   'endNode');
 }
 
-// -----------------------------------------------
-// Fungsi Helper Zoom (dipanggil dari HTML)
-// -----------------------------------------------
 function zoomMapIn()  { if (map) map.zoomIn(); }
 function zoomMapOut() { if (map) map.zoomOut(); }
 
-// -----------------------------------------------
-// Toggle Gaya Peta (Map / Satellite)
-// -----------------------------------------------
 function setMapStyle(style) {
     if (style === '2D') {
         map.removeLayer(satelliteLayer);
@@ -85,9 +67,6 @@ function setMapStyle(style) {
     }
 }
 
-// -----------------------------------------------
-// Gambar Rute di Peta
-// -----------------------------------------------
 function drawRouteReal(polylineCoords, startId, endId, isGpsStart, gpsCoords, routeColor) {
     if (routeLayer)      map.removeLayer(routeLayer);
     if (startMarkerObj)  map.removeLayer(startMarkerObj);
@@ -106,9 +85,6 @@ function drawRouteReal(polylineCoords, startId, endId, isGpsStart, gpsCoords, ro
     map.flyToBounds(routeLayer.getBounds(), { padding: [60, 60], duration: 1.5 });
 }
 
-// -----------------------------------------------
-// Utilitas Kalkulasi Jarak (Haversine)
-// -----------------------------------------------
 function calculateDistance(lat1, lon1, lat2, lon2) {
     const R  = 6371e3;
     const p1 = lat1 * Math.PI / 180;
@@ -128,9 +104,6 @@ function findNearestWaypoint(lat, lng) {
     return { id: nearestId, distance: minDist };
 }
 
-// -----------------------------------------------
-// GPS Tracking
-// -----------------------------------------------
 function toggleGpsTracking() {
     if (gpsWatchId !== null) stopLocationTracking();
     else requestLocation();
@@ -168,7 +141,6 @@ function requestLocation() {
                 if (startClear) startClear.classList.remove('hidden');
             }
 
-            // Kompas: rotasi ikon GPS sesuai arah HP
             if (!window.compassInitialized) {
                 if (window.DeviceOrientationEvent) {
                     window.addEventListener('deviceorientation', (event) => {

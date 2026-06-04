@@ -1,16 +1,8 @@
-/* =============================================
-   SIDEBAR.CSS — Main Sidebar, Auth Overlay,
-   Progress Stepper, Empty State, Stat Cards,
-   Nav Steps, Bottom Sheet Mobile States
-   ============================================= */
-
-/* Auth Overlay Backdrop */
 #authOverlay {
     background: rgba(15, 23, 42, 0.85);
     backdrop-filter: blur(8px);
 }
 
-/* Sidebar Deep Navy Blue Background */
 #mainSidebar {
     background: linear-gradient(150deg, #0B192C 0%, #1A365D 100%) !important;
     backdrop-filter: blur(20px);
@@ -31,7 +23,6 @@
     mask-image: linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0));
 }
 
-/* Stat Cards */
 .stat-card {
     background: rgba(15, 23, 42, 0.6);
     border-radius: 12px;
@@ -60,7 +51,6 @@
 .stat-distance::before { background: linear-gradient(90deg, #fbbf24, #f97316); }
 .stat-time::before     { background: linear-gradient(90deg, #34d399, #06b6d4); }
 
-/* Nav Step Timeline */
 .nav-step-item {
     display: flex;
     gap: 12px;
@@ -90,7 +80,6 @@
 .nav-step-icon.step-start { background: rgba(52, 211, 153, 0.12); border-color: rgba(52, 211, 153, 0.5); }
 .nav-step-icon.step-end   { background: rgba(244, 63, 94, 0.12);  border-color: rgba(244, 63, 94, 0.5);  }
 
-/* Progress Stepper */
 .progress-stepper-card {
     background: rgba(15, 23, 42, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.07);
@@ -140,7 +129,6 @@
 @keyframes stepper-spin { to { transform: rotate(360deg); } }
 .stepper-spinner { display: inline-block; animation: stepper-spin 0.7s linear infinite; }
 
-/* Empty State */
 .empty-state-card {
     background: rgba(15, 23, 42, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.06);
@@ -169,7 +157,6 @@
 
 #resultSkeleton.visible { display: block; }
 
-/* Bottom Sheet Mobile States */
 @media (max-width: 768px) {
     #mainSidebar {
         touch-action: pan-y;
