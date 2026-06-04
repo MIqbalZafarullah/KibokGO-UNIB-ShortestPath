@@ -1,11 +1,3 @@
-// ================================================
-// ui.js — Animasi UI, Toast, Theme & Bottom Sheet
-// KibokGO UNIB | AI-Powered Campus Navigation
-// ================================================
-
-// -----------------------------------------------
-// Toast Notification System
-// -----------------------------------------------
 function showToast(msg, type = 'error') {
     const container = document.getElementById('toastContainer');
     const toast     = document.createElement('div');
