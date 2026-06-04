@@ -53,6 +53,9 @@ async function processRouting(isAlternative = false) {
         if (startId === 'gps') {
             if (!userLocation) throw new Error('Gagal membaca GPS.');
             originCoords = userLocation;
+            const nearest = findNearestWaypoint(userLocation.lat, userLocation.lng);
+            if (!nearest.id) throw new Error('Lokasi GPS Anda di luar jangkauan kampus.');
+            actualAlgoStart = nearest.id;
         } else {
             originCoords = { lat: nodes[startId].lat, lng: nodes[startId].lng };
         }
@@ -68,7 +71,29 @@ async function processRouting(isAlternative = false) {
             return;
         }
 
-        const coordsStr = `${originCoords.lng},${originCoords.lat};${destCoords.lng},${destCoords.lat}`;
+        // Run Dijkstra algorithm on client side
+        const dijkstraResult = runDijkstra(actualAlgoStart, endId);
+        
+        // Render Dijkstra logs in UI
+        const logList = document.getElementById('dijkstraLogList');
+        if (logList) {
+            logList.innerHTML = dijkstraResult.logs.map(log => `<div class="py-1 border-b border-slate-900/30">${log}</div>`).join('');
+        }
+
+        let coordsStr = '';
+        if (dijkstraResult.found && dijkstraResult.path.length > 0) {
+            let pathCoords = [];
+            if (startId === 'gps') {
+                pathCoords.push(userLocation);
+            }
+            dijkstraResult.path.forEach(nodeId => {
+                pathCoords.push({ lat: nodes[nodeId].lat, lng: nodes[nodeId].lng });
+            });
+            coordsStr = pathCoords.map(c => `${c.lng},${c.lat}`).join(';');
+        } else {
+            coordsStr = `${originCoords.lng},${originCoords.lat};${destCoords.lng},${destCoords.lat}`;
+        }
+
         const osrmUrl   = `${OSRM_BASE_URL}/${travelMode}/${coordsStr}?overview=full&geometries=geojson&steps=true&alternatives=true`;
         const res  = await fetch(osrmUrl);
         const data = await res.json();

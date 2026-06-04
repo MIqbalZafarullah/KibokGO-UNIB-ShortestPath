@@ -176,3 +176,83 @@ function stopLocationTracking() {
     setGpsFabActive(false);
     showToast('GPS tracking dihentikan.', 'info');
 }
+
+let isGraphOverlayVisible = false;
+let graphOverlayLayers = [];
+
+function toggleGraphOverlay() {
+    isGraphOverlayVisible = !isGraphOverlayVisible;
+    const btn = document.getElementById('graphToggleBtn');
+    
+    if (isGraphOverlayVisible) {
+        if (btn) {
+            btn.className = 'w-[34px] h-[34px] bg-indigo-600 text-white border border-indigo-500 rounded-full flex items-center justify-center transition-all shadow-lg shadow-indigo-500/30';
+        }
+        showToast('🕸️ Jaringan Graf Kampus ditampilkan.', 'info');
+        drawGraphOverlay();
+    } else {
+        if (btn) {
+            btn.className = 'w-[34px] h-[34px] bg-slate-900/95 backdrop-blur-md border border-slate-700 rounded-full flex items-center justify-center text-indigo-400 hover:text-indigo-200 hover:bg-slate-700 transition-all shadow-lg shadow-black/30';
+        }
+        showToast('🕸️ Jaringan Graf Kampus disembunyikan.', 'info');
+        clearGraphOverlay();
+    }
+}
+
+function drawGraphOverlay() {
+    clearGraphOverlay();
+    
+    const drawnEdges = new Set();
+    for (const u in DIJKSTRA_GRAPH) {
+        const uNode = nodes[u];
+        if (!uNode) continue;
+        
+        const neighbors = DIJKSTRA_GRAPH[u];
+        for (const v in neighbors) {
+            const vNode = nodes[v];
+            if (!vNode) continue;
+            
+            const edgeKey = [u, v].sort().join('-');
+            if (drawnEdges.has(edgeKey)) continue;
+            drawnEdges.add(edgeKey);
+            
+            const line = L.polyline([[uNode.lat, uNode.lng], [vNode.lat, vNode.lng]], {
+                color: '#6366f1',
+                weight: 2.5,
+                opacity: 0.6,
+                dashArray: '6, 6',
+                lineJoin: 'round'
+            }).addTo(map);
+            
+            graphOverlayLayers.push(line);
+        }
+    }
+    
+    for (const id in nodes) {
+        const n = nodes[id];
+        const circle = L.circleMarker([n.lat, n.lng], {
+            radius: 6,
+            fillColor: '#818cf8',
+            color: '#4f46e5',
+            weight: 2.5,
+            opacity: 0.9,
+            fillOpacity: 0.9
+        }).addTo(map);
+        
+        circle.bindTooltip(`<strong>${n.name}</strong><br><span class="text-[10px] text-slate-400">ID: ${id}</span>`, {
+            permanent: false,
+            direction: 'top'
+        });
+        
+        graphOverlayLayers.push(circle);
+    }
+}
+
+function clearGraphOverlay() {
+    graphOverlayLayers.forEach(layer => {
+        if (map && map.hasLayer(layer)) {
+            map.removeLayer(layer);
+        }
+    });
+    graphOverlayLayers = [];
+}
